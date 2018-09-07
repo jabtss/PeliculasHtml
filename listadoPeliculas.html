@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>Peliculas GFI</title>
+    <base href="/">
+
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO"
+        crossorigin="anonymous">
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <a class="navbar-brand" href="#">Navbar</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
+            aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav mr-auto">
+                <li class="nav-item ">
+                    <a class="nav-link" onclick="listadoInit()">Home </a>
+                </li>
+
+            </ul>
+
+        </div>
+        <input id="search" class="form-control mr-sm-2" type="search" placeholder="Buscar ... ejemplo : batman" aria-label="Search">
+        <button class="btn btn-outline-primary my-2 my-sm-0" type="button" onclick="listado()">Search</button>
+    </nav>
+
+    <div class="container main-container m-5">
+        <div class="alert alert-danger" role="alert" id="alert">
+            No hay resultados para la busqueda seleccionada
+        </div>
+        <div class="card-columns" id="listaPeliculas"></div>
+        <div class="card-columns" id="detallePeliculas"></div>
+    </div>
+
+</body>
+
+<script>
+
+    var httpRequest = new XMLHttpRequest()
+    var url = "http://www.omdbapi.com/?apikey=f12ba140";
+    var peliculas = [];
+    var pelicula;
+
+
+
+    listado();
+
+
+    function verPelicula(index) {
+        let param = "&i=";
+
+        httpRequest.onload = function () {
+
+            if (httpRequest.status >= 200 && httpRequest.status < 400) {
+                let data = JSON.parse(httpRequest.responseText);
+                console.log(data);
+                pelicula = data;
+                construirPelicula();
+            } else {
+
+            }
+        };
+
+        httpRequest.onerror = function () {
+        };
+
+
+
+        httpRequest.open('GET', url + param + peliculas[index].imdbID, true)
+        httpRequest.send()
+
+
+
+    }
+
+    function construirPelicula() {
+        document.getElementById('listaPeliculas').style.display = 'none';
+        document.getElementById('detallePeliculas').style.display = 'block';
+        let detallePeliculas = document.querySelector("#detallePeliculas");
+        detallePeliculas.innerHTML = ``;
+        detallePeliculas.innerHTML += `
+                <div class="card"  >                    
+                    <img class="card-img-top " src="${pelicula.Poster}" alt="${pelicula.Title}">
+                    <div class="card-body">
+                    <h5 class="card-title">${pelicula.Title}</h5>
+                    <p class="card-text">${pelicula.Year}</p>                    
+                    <h5 class="card-title">Description</h5>    
+                    <p class="card-text">${pelicula.Plot}</p>
+                    <h5 class="card-title">Duration</h5>    
+                    <p class="card-text">${pelicula.Runtime}</p>
+                    <h5 class="card-title">Writer</h5>    
+                    <p class="card-text">${pelicula.Writer}</p>                    
+                    <button class="btn btn-outline-primary btn-block" type"button" onclick="volverAListado()">
+                        Volver
+                    </button>
+                    </div>
+                </div>
+                `;
+    }
+
+    function volverAListado() {
+        document.getElementById('detallePeliculas').style.display = 'none';
+        document.getElementById('listaPeliculas').style.display = 'block';
+    }
+
+    function contruirPeliculas() {
+        document.getElementById('detallePeliculas').style.display = 'none';
+        document.getElementById('listaPeliculas').style.display = 'block';
+        let listaPeliculas = document.querySelector("#listaPeliculas");
+        listaPeliculas.innerHTML = ``;
+        for (let i = 0; i < peliculas.length; i++) {            
+            listaPeliculas.innerHTML +=
+                `<div class="card" >                        
+                        <img class="card-img-top" src=${peliculas[i].Poster} alt="${peliculas[i].Title}">
+                        <div class="card-body">
+                        <h5 class="card-title">${peliculas[i].Title}</h5>
+                        <p class="card-text">${peliculas[i].Year}</p>                        
+                        <button class="btn btn-outline-primary btn-block" type="button" onclick="verPelicula(${i})">
+                            Ver mas
+                        </button>                        
+                        </div>
+                    </div>`;
+        }
+
+    }
+
+    function listado() {
+        debugger;
+        peliculas = [];
+        let param = "&s=";
+        let busquedaCoincidente = document.getElementById('search').value;
+        if (!busquedaCoincidente) {
+            busquedaCoincidente = "batman";
+        } else {
+            busquedaCoincidente = busquedaCoincidente.replace(" ", "+");
+        }
+        httpRequest.onload = function () {
+
+            if (httpRequest.status >= 200 && httpRequest.status < 400) {
+                debugger;
+                let data = JSON.parse(httpRequest.responseText);
+                console.log(data.Search);
+                peliculas = data.Search;
+                document.getElementById('alert').style.display = 'none';
+                if(peliculas&&peliculas.length>0){
+                    contruirPeliculas();    
+                }else{                    
+                    inicializarListadoACero();
+                }
+                
+            } else {
+
+            }
+        };
+
+        httpRequest.onerror = function () {
+        };
+
+
+
+        httpRequest.open('GET', url + param + busquedaCoincidente, true)
+        httpRequest.send()
+
+    }
+
+    function inicializarListadoACero(){
+        let listaPeliculas = document.querySelector("#listaPeliculas");
+        listaPeliculas.innerHTML = ``;
+        let detallePeliculas = document.querySelector("#detallePeliculas");
+        detallePeliculas.innerHTML = ``;
+        document.getElementById('alert').style.display = 'block';        
+    }
+
+    var input = document.getElementById("search");
+    input.addEventListener("keyup", function (event) {
+        event.preventDefault();
+        if (event.keyCode === 13) {
+            listado();
+        }
+    });
+
+    function listadoInit(){
+        inicializarListadoACero();
+        let busquedaCoincidente = document.getElementById('search').value = "batman";
+        listado();
+    }
+
+
+</script>
+
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+    crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49"
+    crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy"
+    crossorigin="anonymous"></script>
+
+
+
+</html>
